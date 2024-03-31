@@ -1,6 +1,8 @@
 # tHotBar
 tHotBar is an interface for binding and visualizing macros more easily.  It uses visual elements to display as much information as possible, and is highly customizable in appearance.
 
+(Tirem) Added experimental controller support for dinput and xinput
+
 ## How To Install
 Download the release zip.  Extract directly to your Ashita directory(the folder with ashita-cli.exe in it!).  Everything should fall into place.  **tRenderer is no longer a part of tHotBar.  You can just load the addon now.**<br>
 

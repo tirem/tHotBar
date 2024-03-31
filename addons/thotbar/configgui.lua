@@ -125,6 +125,8 @@ function exposed:Render()
                     imgui.ShowHelp('Overrides weaponskill icons when a skillchain would be formed.');
                     CheckBox('SC Animation', 'ShowSkillchainAnimation');
                     imgui.ShowHelp('Animates a border around weaponskill icons when a skillchain would be formed.');
+                    CheckBox('Controller Support', 'EnableController');
+                    imgui.ShowHelp('Enable controller support');
                     imgui.EndGroup();
                     imgui.SameLine();
                     imgui.BeginGroup();

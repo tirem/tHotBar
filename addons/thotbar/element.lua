@@ -159,7 +159,7 @@ function Element:UpdateBinding(binding)
     end
 end
 
-function Element:RenderIcon(sprite)
+function Element:RenderIcon(sprite, selected)
     self.Updater:Tick();
 
     local positionX = self.PositionX;
@@ -174,6 +174,11 @@ function Element:RenderIcon(sprite)
             vec_position.y = positionY + layout.Frame.OffsetY;
             sprite:Draw(component.Texture, component.Rect, component.Scale, nil, 0.0, vec_position, d3dwhite);
         end
+    end
+
+    if (gSettings.EnableController and selected == true) then
+        local component = layout.Textures.Select;
+        sprite:Draw(component.Texture, component.Rect, component.Scale, nil, 0.0, vec_position, d3dwhite);
     end
 
     if (self.Binding == nil) then

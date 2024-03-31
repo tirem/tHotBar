@@ -15,6 +15,7 @@ addon.desc      = 'Displays macros as visible and clickable elements.';
 addon.link      = 'https://ashitaxi.com/';
 
 require('common');
+require('controllerhandler')
 
 local jit = require('jit');
 jit.off();

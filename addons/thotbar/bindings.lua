@@ -8,6 +8,10 @@ local bindings = {
 bindings.ActivePalette = bindings.JobBindings.Palettes[1];
 bindings.ActivePaletteIndex = 1;
 bindings.LastPaletteIndex = 1;
+bindings.SelectedElement = 0;
+bindings.PaletteUpdateTime = os.clock();
+bindings.PaletteShowDelay = 3;
+bindings.PaletteFadeTime = .1;
 
 local function WriteBinding(writer, depth, hotkey, binding)
     local pad1 = string.rep(' ', depth);
@@ -215,17 +219,58 @@ function exposed:BindPalette(hotkey, binding)
     ApplyBindings();
 end
 
-function exposed:GetDisplayText()
+function exposed:GetDisplayTextAndOpacity()
     if (bindings.ActivePalette == nil) then
         return;
     end
-    
+
+    local timeElapsed = os.clock() - bindings.PaletteUpdateTime;
+
+    if (timeElapsed <= bindings.PaletteShowDelay + bindings.PaletteFadeTime) then
+
+        local opacity = 1;
+        if (timeElapsed > bindings.PaletteShowDelay) then
+            opacity = 1 - ((timeElapsed - bindings.PaletteShowDelay) / bindings.PaletteFadeTime);
+        end
+
+        return string.format ('%s (%u/%u)', bindings.ActivePalette.Name, bindings.ActivePaletteIndex, #bindings.JobBindings.Palettes), opacity * 255;
+    end
+end
+
+function exposed:NextPalette()
+    bindings.PaletteUpdateTime = os.clock();
     local paletteCount = #bindings.JobBindings.Palettes;
     if (paletteCount == 1) then
+        --Error('Current job only has one palette!');
+        --Message(string.format('Swapped to palette: $H%s$R', bindings.ActivePalette.Name));
         return;
-    else
-        return string.format ('%s (%u/%u)', bindings.ActivePalette.Name, bindings.ActivePaletteIndex, paletteCount);
     end
+    bindings.ActivePaletteIndex = bindings.ActivePaletteIndex + 1;
+    if (bindings.ActivePaletteIndex > paletteCount) then
+        bindings.ActivePaletteIndex = 1;
+    end
+    bindings.ActivePalette = bindings.JobBindings.Palettes[bindings.ActivePaletteIndex];
+
+    ApplyBindings();
+    --Message(string.format('Swapped to palette: $H%s$R', bindings.ActivePalette.Name));
+end
+
+function exposed:PreviousPalette()
+    bindings.PaletteUpdateTime = os.clock();
+    local paletteCount = #bindings.JobBindings.Palettes;
+    if (paletteCount == 1) then
+        --Error('Current job only has one palette!');
+        --Message(string.format('Swapped to palette: $H%s$R', bindings.ActivePalette.Name));
+        return;
+    end
+    bindings.ActivePaletteIndex = bindings.ActivePaletteIndex - 1;
+    if (bindings.ActivePaletteIndex < 1) then
+        bindings.ActivePaletteIndex = paletteCount;
+    end
+    bindings.ActivePalette = bindings.JobBindings.Palettes[bindings.ActivePaletteIndex];
+
+    ApplyBindings();
+    --Message(string.format('Swapped to palette: $H%s$R', bindings.ActivePalette.Name));
 end
 
 function exposed:HandleCommand(args)
@@ -311,31 +356,9 @@ function exposed:HandleCommand(args)
             Message(string.format('[%u] %s%s', index, palette.Name, (bindings.ActivePaletteIndex == index) and ' - $HACTIVE$R' or ''));
         end
     elseif (cmd == 'next') then
-        local paletteCount = #bindings.JobBindings.Palettes;
-        if (paletteCount == 1) then
-            Error('Current job only has one palette!');
-            return;
-        end
-        bindings.ActivePaletteIndex = bindings.ActivePaletteIndex + 1;
-        if (bindings.ActivePaletteIndex > paletteCount) then
-            bindings.ActivePaletteIndex = 1;
-        end
-        bindings.ActivePalette = bindings.JobBindings.Palettes[bindings.ActivePaletteIndex];
-        ApplyBindings();
-        Message(string.format('Swapped to palette: $H%s$R', bindings.ActivePalette.Name));
+        NextPalette();
     elseif (cmd == 'previous') then
-        local paletteCount = #bindings.JobBindings.Palettes;
-        if (paletteCount == 1) then
-            Error('Current job only has one palette!');
-            return;
-        end
-        bindings.ActivePaletteIndex = bindings.ActivePaletteIndex - 1;
-        if (bindings.ActivePaletteIndex < 1) then
-            bindings.ActivePaletteIndex = paletteCount;
-        end
-        bindings.ActivePalette = bindings.JobBindings.Palettes[bindings.ActivePaletteIndex];
-        ApplyBindings();
-        Message(string.format('Swapped to palette: $H%s$R', bindings.ActivePalette.Name));
+        PreviousPalette();
     elseif (cmd == 'change') then
         if (args[4] == nil) then
             Error('Command Syntax: $H/tb palette change [name]$R.');

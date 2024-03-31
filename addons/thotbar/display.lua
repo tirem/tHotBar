@@ -78,6 +78,13 @@ function Display:Destroy()
 end
 
 function Display:Initialize(layout)
+    self.lastUpdateTime = os.clock()  -- Initialize the last update time
+    self.initialDelay = .2 -- How long before selection loop starts
+    self.loopInterval = 0.06  -- Loop selection this fast
+    self.isLooping = false  -- Indicates whether the looping has started
+    self.SelectedIndex = 0; -- Initial index for selections
+    self.state = -1;    -- Current state the controller is in
+
     self.Layout = layout;
     self.Elements = T{};
 
@@ -133,6 +140,19 @@ function Display:Render()
         return;
     end
 
+    local currentTime = os.clock()
+
+    -- Handle the initial delay and loop timing
+    if (self.state ~= -1) then
+        if not self.isLooping and currentTime - self.lastUpdateTime >= self.initialDelay then
+            self.isLooping = true
+            self.lastUpdateTime = currentTime
+        elseif self.isLooping and currentTime - self.lastUpdateTime >= self.loopInterval then
+            self:ExecutePad(self.state)  -- Update the state based on the current direction
+            self.lastUpdateTime = currentTime
+        end
+    end
+
     local pos = gSettings.Position;
     local sprite = self.Sprite;
     sprite:Begin();
@@ -144,7 +164,7 @@ function Display:Render()
         sprite:Draw(component.Texture, component.Rect, component.Scale, nil, 0.0, vec_position, d3dwhite);
     end
     
-    local paletteText = gBindings:GetDisplayText();
+    local paletteText, opacity = gBindings:GetDisplayTextAndOpacity();
     if (gSettings.ShowPalette) and (paletteText) then
         local obj = self.PaletteDisplay;
         obj:set_text(paletteText);
@@ -158,12 +178,15 @@ function Display:Render()
             vec_position.x = posX;;
         end
         vec_position.y = obj.OffsetY + pos[2];
-        sprite:Draw(texture, rect, vec_font_scale, nil, 0.0, vec_position, d3dwhite);
+        
+        opacity = d3d8.D3DCOLOR_ARGB(opacity, 255, 255, 255);
+        sprite:Draw(texture, rect, vec_font_scale, nil, 0.0, vec_position, opacity);
     end
 
-    for _,element in ipairs(self.Elements) do
-        element:RenderIcon(sprite);
+    for index, element in ipairs(self.Elements) do
+        element:RenderIcon(sprite, index == self.SelectedIndex);
     end
+    
 
     for _,element in ipairs(self.Elements) do
         element:RenderText(sprite);
@@ -278,6 +301,60 @@ function Display:UpdatePosition()
     for _,element in ipairs(self.Elements) do
         element:SetPosition(position);
     end
+end
+
+function Display:ExecutePad(state)
+    local maxColumns = 10  -- The width is always 10 (hardcoded garbage code)
+    local maxRows = 4;
+    local numElements = #self.Elements
+    if (numElements ~= nil) then
+        maxRows = numElements / maxColumns
+    end
+
+    if (state == 0) then -- up
+        self.SelectedIndex = self.SelectedIndex - 10
+        -- Wrap to the bottom if moving up from the top row
+        if self.SelectedIndex < 1 then
+            self.SelectedIndex = self.SelectedIndex + (maxRows * maxColumns)
+        end
+    elseif (state == 18000) then -- down
+        self.SelectedIndex = self.SelectedIndex + 10
+        -- Wrap to the top if moving down from the bottom row
+        if self.SelectedIndex > (maxRows * maxColumns) then
+            self.SelectedIndex = self.SelectedIndex - (maxRows * maxColumns)
+        end
+    elseif (state == 27000) then -- left
+        self.SelectedIndex = self.SelectedIndex - 1
+        -- Wrap to the right if moving left from the first column
+        if (self.SelectedIndex % maxColumns) == 0 then
+            self.SelectedIndex = self.SelectedIndex + maxColumns
+        end
+    elseif (state == 9000) then -- right
+        self.SelectedIndex = self.SelectedIndex + 1
+        -- Wrap to the left if moving right from the last column
+        if (self.SelectedIndex % maxColumns) == 1 then
+            self.SelectedIndex = self.SelectedIndex - maxColumns
+        end
+    end
+
+    -- catch for invalid index
+    if (numElements ~= nil and (self.SelectedIndex < 1 or self.SelectedIndex > #self.Elements)) then
+        self.SelectedIndex = 1;
+    end
+end
+
+function Display:Pad(state)
+    if (T{-1, 0, 18000, 27000, 9000}:contains(state)) then
+        self.isLooping = false;
+        self.state = state;
+        self.lastUpdateTime = os.clock();
+
+        self:ExecutePad(self.state);
+    end
+end
+
+function Display:PadActivate()
+    self:Activate(self.SelectedIndex);
 end
 
 return Display;

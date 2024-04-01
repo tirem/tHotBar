@@ -36,7 +36,7 @@ local layout = {
         Fragmentation = 'skillchains/Fragmentation.png',
         Light         = 'skillchains/Light.png',
         Darkness      = 'skillchains/Darkness.png',
-        Select        = 'misc/trigger.png',
+        Select        = 'misc/select.png',
         Buttons       = { Path='misc/buttons.png', Width=40, Height=40 },
         Dpad          = { Path='misc/dpad.png', Width=40, Height=40 },
         DragHandle    = { Path='misc/drag.png', Width=26, Height=26 },

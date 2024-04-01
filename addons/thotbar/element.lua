@@ -176,84 +176,85 @@ function Element:RenderIcon(sprite, selected)
         end
     end
 
-    if (gSettings.EnableController and selected == true) then
-        local component = layout.Textures.Select;
-        sprite:Draw(component.Texture, component.Rect, component.Scale, nil, 0.0, vec_position, d3dwhite);
-    end
+    if (self.Binding ~= nil) then
 
-    if (self.Binding == nil) then
-        return;
-    end
-
-    --Evaluate skillchain state..
-    local icon = self.Icon;
-    vec_position.x = positionX + layout.Icon.OffsetX;
-    vec_position.y = positionY + layout.Icon.OffsetY;
-    if (self.State.Skillchain ~= nil) then
-        if (self.State.Skillchain.Open) then
-            if (self.SkillchainAnimation == nil) then
-                self.SkillchainAnimation =
-                {
-                    Frame = 1,
-                    Time = os.clock();
-                };
-            elseif (os.clock() > (self.SkillchainAnimation.Time + layout.SkillchainFrameLength)) then
-                self.SkillchainAnimation.Frame = self.SkillchainAnimation.Frame + 1;
-                if (self.SkillchainAnimation.Frame > #layout.SkillchainFrames) then
-                    self.SkillchainAnimation.Frame = 1;
+        --Evaluate skillchain state..
+        local icon = self.Icon;
+        vec_position.x = positionX + layout.Icon.OffsetX;
+        vec_position.y = positionY + layout.Icon.OffsetY;
+        if (self.State.Skillchain ~= nil) then
+            if (self.State.Skillchain.Open) then
+                if (self.SkillchainAnimation == nil) then
+                    self.SkillchainAnimation =
+                    {
+                        Frame = 1,
+                        Time = os.clock();
+                    };
+                elseif (os.clock() > (self.SkillchainAnimation.Time + layout.SkillchainFrameLength)) then
+                    self.SkillchainAnimation.Frame = self.SkillchainAnimation.Frame + 1;
+                    if (self.SkillchainAnimation.Frame > #layout.SkillchainFrames) then
+                        self.SkillchainAnimation.Frame = 1;
+                    end
+                    self.SkillchainAnimation.Time = os.clock();
                 end
-                self.SkillchainAnimation.Time = os.clock();
+            else
+                self.SkillchainAnimation = nil;
+            end
+            
+            if (gSettings.ShowSkillchainIcon) and (self.Binding.ShowSkillchainIcon) then
+                icon = layout.Textures[self.State.Skillchain.Name];
             end
         else
             self.SkillchainAnimation = nil;
         end
-        
-        if (gSettings.ShowSkillchainIcon) and (self.Binding.ShowSkillchainIcon) then
-            icon = layout.Textures[self.State.Skillchain.Name];
-        end
-    else
-        self.SkillchainAnimation = nil;
-    end
 
-    --Draw icon over frame..
-    if icon then
-        vec_position.x = positionX + layout.Icon.OffsetX;
-        vec_position.y = positionY + layout.Icon.OffsetY;
-        local opacity = d3dwhite;
-        if (gSettings.ShowFade) and (self.Binding.ShowFade) and (not self.State.Ready) then
-            opacity = layout.FadeOpacity;
-        end
-        sprite:Draw(icon.Texture, icon.Rect, icon.Scale, nil, 0.0, vec_position, opacity);
-    end
-
-    --Draw skillchain animation if applicable..
-    if (self.SkillchainAnimation) and (gSettings.ShowSkillchainAnimation) and (self.Binding.ShowSkillchainAnimation) then
-        local component = layout.SkillchainFrames[self.SkillchainAnimation.Frame];
-        if component then
+        --Draw icon over frame..
+        if icon then
             vec_position.x = positionX + layout.Icon.OffsetX;
             vec_position.y = positionY + layout.Icon.OffsetY;
-            sprite:Draw(component.Texture, component.Rect, component.Scale, nil, 0.0, vec_position, d3dwhite);
+            local opacity = d3dwhite;
+            if (gSettings.ShowFade) and (self.Binding.ShowFade) and (not self.State.Ready) then
+                opacity = layout.FadeOpacity;
+            end
+            sprite:Draw(icon.Texture, icon.Rect, icon.Scale, nil, 0.0, vec_position, opacity);
         end
-    end
 
-    --Draw crossout if applicable..
-    if (gSettings.ShowCross) and (self.Binding.ShowCross) and (not self.State.Available) then
-        local component = layout.Textures.Cross;
-        if component then
-            vec_position.x = positionX + layout.Icon.OffsetX;
-            vec_position.y = positionY + layout.Icon.OffsetY;
-            sprite:Draw(component.Texture, component.Rect, component.Scale, nil, 0.0, vec_position, d3dwhite);
+        --Draw skillchain animation if applicable..
+        if (self.SkillchainAnimation) and (gSettings.ShowSkillchainAnimation) and (self.Binding.ShowSkillchainAnimation) then
+            local component = layout.SkillchainFrames[self.SkillchainAnimation.Frame];
+            if component then
+                vec_position.x = positionX + layout.Icon.OffsetX;
+                vec_position.y = positionY + layout.Icon.OffsetY;
+                sprite:Draw(component.Texture, component.Rect, component.Scale, nil, 0.0, vec_position, d3dwhite);
+            end
+        end
+
+        --Draw crossout if applicable..
+        if (gSettings.ShowCross) and (self.Binding.ShowCross) and (not self.State.Available) then
+            local component = layout.Textures.Cross;
+            if component then
+                vec_position.x = positionX + layout.Icon.OffsetX;
+                vec_position.y = positionY + layout.Icon.OffsetY;
+                sprite:Draw(component.Texture, component.Rect, component.Scale, nil, 0.0, vec_position, d3dwhite);
+            end
         end
     end
 
     --Draw trigger if applicable..
-    if (gSettings.ShowTrigger) and (self.Binding.ShowTrigger) and (os.clock() < (self.Activation + gSettings.TriggerDuration)) then
+    if (gSettings.ShowTrigger) and (os.clock() < (self.Activation + gSettings.TriggerDuration)) then
         local component = layout.Textures.Trigger;
         if component then
             vec_position.x = positionX + layout.Icon.OffsetX;
             vec_position.y = positionY + layout.Icon.OffsetY;
             sprite:Draw(component.Texture, component.Rect, component.Scale, nil, 0.0, vec_position, layout.TriggerOpacity);
         end
+    end
+
+    if (gSettings.EnableController and selected == true) then
+        local component = layout.Textures.Select;
+        vec_position.x = positionX + layout.Icon.OffsetX;
+        vec_position.y = positionY + layout.Icon.OffsetY;
+        sprite:Draw(component.Texture, component.Rect, component.Scale, nil, 0.0, vec_position, d3dwhite);
     end
 end
 

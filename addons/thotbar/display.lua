@@ -79,8 +79,8 @@ end
 
 function Display:Initialize(layout)
     self.lastUpdateTime = os.clock()  -- Initialize the last update time
-    self.initialDelay = .2 -- How long before selection loop starts
-    self.loopInterval = 0.06  -- Loop selection this fast
+    self.initialDelay = .15 -- How long before selection loop starts
+    self.loopInterval = 0.05  -- Loop selection this fast
     self.isLooping = false  -- Indicates whether the looping has started
     self.SelectedIndex = 0; -- Initial index for selections
     self.state = -1;    -- Current state the controller is in
@@ -146,6 +146,7 @@ function Display:Render()
     if (self.state ~= -1) then
         if not self.isLooping and currentTime - self.lastUpdateTime >= self.initialDelay then
             self.isLooping = true
+            self:ExecutePad(self.state)
             self.lastUpdateTime = currentTime
         elseif self.isLooping and currentTime - self.lastUpdateTime >= self.loopInterval then
             self:ExecutePad(self.state)  -- Update the state based on the current direction

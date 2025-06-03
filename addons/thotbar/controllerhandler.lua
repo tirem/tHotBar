@@ -106,6 +106,68 @@ end);
 --]]
 ashita.events.register('xinput_button', 'xinput_button_callback1', function (e)
 
+    -- print('Button: '..tostring(e.button)..'   State: '..tostring(e.state));
+
+    if (gSettings.EnableController == false) then return end
+
+    -- Handle gamepad inputs
+    if (e.button == 16) then -- L Trigger
+        e.blocked = true;
+        LHeld = e.state == 255;
+        if (LHeld == false and RHeld == false) then
+            gDisplay:Pad(-1);
+        end
+    elseif (e.button == 17) then -- R Trigger
+        e.blocked = true;
+        RHeld = e.state == 255;
+        if (LHeld == false and RHeld == false) then
+            gDisplay:Pad(-1);
+        end
+    elseif (e.button == 0) then -- D Pad
+        if (e.state == 0) then
+            gDisplay:Pad(-1);
+        elseif (e.state == 1 and (LHeld or RHeld) and GetSubTargetActive() == false) then
+            e.blocked = true;
+            gDisplay:Pad(0);
+        end
+    elseif (e.button == 1) then -- D Pad
+        if (e.state == 0) then
+            gDisplay:Pad(-1);
+        elseif (e.state == 1 and (LHeld or RHeld) and GetSubTargetActive() == false) then
+            e.blocked = true;
+            gDisplay:Pad(18000);
+        end
+    elseif (e.button == 2) then -- D Pad
+        if (e.state == 0) then
+            gDisplay:Pad(-1);
+        elseif (e.state == 1 and (LHeld or RHeld) and GetSubTargetActive() == false) then
+            e.blocked = true;
+            gDisplay:Pad(27000);
+        end
+    elseif (e.button == 3) then -- D Pad
+        if (e.state == 0) then
+            gDisplay:Pad(-1);
+        elseif (e.state == 1 and (LHeld or RHeld) and GetSubTargetActive() == false) then
+            e.blocked = true;
+            gDisplay:Pad(9000);
+        end
+    elseif (e.button == 13 and e.state == 1) then -- Confirm
+        if ((LHeld or RHeld) and GetSubTargetActive() == false) then
+            e.blocked = true;
+            gDisplay:PadActivate();
+        end
+    elseif (e.button == 8 and e.state == 1) then -- L Bumper
+        if (LHeld or RHeld) then
+            e.blocked = true;
+            gBindings:PreviousPalette();
+        end
+    elseif (e.button == 9 and e.state == 1) then -- R Bumper
+        if (LHeld or RHeld) then
+            e.blocked = true;
+            gBindings:NextPalette();
+        end
+    end
+--[[
     if (gSettings.EnableController == false) then return end
 
     -- Handle gamepad inputs
@@ -154,6 +216,7 @@ ashita.events.register('xinput_button', 'xinput_button_callback1', function (e)
             gBindings:NextPalette();
         end
     end
+    --]]
 end);
 
 --[[
